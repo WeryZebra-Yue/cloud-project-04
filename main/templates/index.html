@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Start, Stop, and Monitor Jobs</title>
+    <style>
+      #status {
+        margin-top: 20px;
+        font-size: 18px;
+        color: green;
+      }
+
+      #error {
+        margin-top: 20px;
+        font-size: 18px;
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Start Calculation Job</h1>
+
+    <form id="jobForm">
+      {% csrf_token %}
+      <label
+        >Weight Type:
+        <select name="weight_type" id="weight_type">
+          <option value="00">00</option>
+          <option value="01">01</option>
+          <option value="02">02</option>
+          <option value="03">03</option>
+          <option value="04">04</option>
+          <option value="05">05</option>
+          <option value="06">06</option>
+          <option value="07">07</option>
+          <option value="08">08</option>
+          <option value="09">09</option>
+        </select> </label
+      ><br /><br />
+      <!-- set a zerod defaulty -->
+      <label
+        >Random Seed:
+        <input type="number" name="random_seed" value="0" max="32000" /> </label
+      ><br /><br />
+      <label
+        >Number of Tries:
+        <input type="number" name="num_of_tries" value="1000000" /> </label
+      ><br /><br />
+      <label
+        >Number of Batch Jobs:
+        <input type="number" name="batch_jobs" value="1" /> </label
+      ><br /><br />
+      <!-- <button type="submit">Start Job</button> -->
+      <button
+        id="start-stop-toggle"
+        onclick="toggleJob(
+        jobId, this)"
+      >
+        Start Job
+      </button>
+    </form>
+
+    <div id="status"></div>
+    <div id="bestDistance"></div>
+    <div id="error"></div>
+
+    <script>
+      let jobId = null;
+      let weightType = null;
+      let pollingInterval = null;
+      pollBestDistanceByWeightType("00");
+
+      function toggleJob(jobId, buttonElement) {
+        if (buttonElement.innerText === "Start Job") {
+        } else {
+          // Stop Job
+          fetch(`/stop-job/${jobId}/`, {
+            method: "POST",
+          })
+            .then((response) => response.json())
+            .then((data) => {
+              if (data.status === "success") {
+                buttonElement.innerText = "Start Job"; // Change button text
+              } else {
+              }
+            })
+            .catch((error) => {});
+        }
+      }
+
+      async function pollJobStatus() {
+        if (!jobId) return;
+
+        try {
+          const response = await fetch(`/update-job-status/${jobId}/`);
+          const data = await response.json();
+
+          if (data.status === "running") {
+            document.getElementById(
+              "status"
+            ).innerText = `Job Running: ${data.status}`;
+            document.getElementById("error").innerText = "";
+          } else if (data.status === "completed") {
+            document.getElementById(
+              "status"
+            ).innerText = `Job Completed! Distance: ${data.best_distance}`;
+            // update the stop button to start button
+            document.getElementById("start-stop-toggle").innerText =
+              "Start Job";
+            clearInterval(pollingInterval);
+          } else if (data.status === "stopped") {
+            document.getElementById("status").innerText = `Job Stopped!`;
+            clearInterval(pollingInterval);
+          } else if (data.status === "error") {
+            document.getElementById(
+              "error"
+            ).innerText = `Error: ${data.message}`;
+            clearInterval(pollingInterval);
+          }
+          setTimeout(() => {
+            pollBestDistanceByWeightType(
+              document.getElementById("jobForm").weight_type.value
+            );
+          }, 5000);
+        } catch (error) {
+          console.error("Error polling job status:", error);
+        }
+      }
+
+      // function stopJob(jobId) {
+      //   fetch(`/stop-job/${jobId}/`, {
+      //     method: "POST",
+      //   })
+      //     .then((response) => response.json())
+      //     .then((data) => {
+      //       if (data.status === "success") {
+      //       } else {
+      //       }
+      //     })
+      //     .catch((error) => {});
+      // }
+
+      async function pollBestDistanceByWeightType(_weightType) {
+        try {
+          const response = await fetch(`/best-distance/${_weightType}/`);
+          const data = await response.json();
+          weightType = _weightType;
+          if (data.status === "success") {
+            document.getElementById(
+              "bestDistance"
+            ).innerText = `Best Distance for Weight Type ${_weightType}: ${data.best_distance}`;
+            document.getElementById("error").innerText = "";
+          } else {
+            document.getElementById(
+              "error"
+            ).innerText = `No best distance found for weight type ${_weightType}`;
+          }
+        } catch (error) {
+          console.error("Error polling best distance:", error);
+        }
+      }
+      document
+        .getElementById("weight_type")
+        .addEventListener("change", async (e) => {
+          e.preventDefault();
+          weightType = e.target.value;
+          console.log("weightType", weightType);
+          pollBestDistanceByWeightType(weightType);
+        });
+
+      document
+        .getElementById("jobForm")
+        .addEventListener("submit", async (e) => {
+          e.preventDefault();
+          let buttonElement = document.getElementById("start-stop-toggle");
+
+          if (
+            buttonElement.innerText === "Stop Job" &&
+            confirm("Are you sure you want to stop the job?")
+          ) {
+            clearInterval(pollingInterval);
+            buttonElement.innerText = "Start Job"; // Change button text
+            document.getElementById("status").innerText = `Job Stopped!`;
+
+            return;
+          }
+          const formData = new FormData(e.target);
+          buttonElement.innerText = "Stop Job"; // Change button text
+
+          const response = await fetch("/start-job/", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await response.json();
+          if (data.status === "success") {
+            document.getElementById(
+              "status"
+            ).innerText = `Started Job ID: ${data.job_id}`;
+            jobId = data.job_id;
+
+            // Start polling the job status every 2 seconds
+            pollingInterval = setInterval(pollJobStatus, 2000);
+          } else {
+            document.getElementById("error").innerText = `Failed to start job`;
+          }
+        });
+    </script>
+  </body>
+</html>

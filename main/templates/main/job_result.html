@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Result</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .success {
+            color: green;
+            font-weight: bold;
+        }
+        pre {
+            background-color: #f4f4f4;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Job Result</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% else %}
+        <p class="success">Best Distance So Far: <strong>{{ best_distance }}</strong></p>
+        <h3>Owens Output:</h3>
+        <pre>{{ output }}</pre>
+        <h3>Job Details:</h3>
+        <ul>
+            <li>Weight Type: {{ job.weight_type }}</li>
+            <li>Random Seed: {{ job.random_seed }}</li>
+            <li>Number of Tries: {{ job.num_of_trys }}</li>
+            <li>Number of Batch Jobs: {{ job.num_of_batch_jobs }}</li>
+            <li>Job Status: {{ job.job_status }}</li>
+        </ul>
+    {% endif %}
+
+    <a href="{% url 'job_view' %}">Run Another Job</a>
+</body>
+</html>
