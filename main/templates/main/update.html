@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Update</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .error {
+            color: red;
+            font-weight: bold;
+        }
+        .status {
+            color: green;
+            font-weight: bold;
+        }
+        a {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+        a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Job Update</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% else %}
+        <h3>Current Job Status</h3>
+        <p class="status">{{ job.job_status }}</p>
+
+        <h3>Details</h3>
+        <ul>
+            <li>Weight Type: {{ job.weight_type }}</li>
+            <li>Random Seed: {{ job.random_seed }}</li>
+            <li>Number of Tries: {{ job.num_of_trys }}</li>
+            <li>Number of Batch Jobs: {{ job.num_of_batch_jobs }}</li>
+            <li>Best Distance So Far: <strong>{{ job.best_distance }}</strong></li>
+        </ul>
+    {% endif %}
+
+    <a href="{% url 'job_view' %}">Back to Job Form</a>
+</body>
+</html>

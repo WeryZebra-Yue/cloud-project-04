@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Job Form</title>
+  </head>
+  <body>
+    <h1>Submit Job</h1>
+    <form method="post">
+      {% csrf_token %} {{ form.as_p }}
+
+      <button type="submit">Submit</button>
+      <!-- get  the best distance from and  call the function update_best_distance
+      -->
+    </form>
+    <div>Status: <strong>{{ job.job_status }}</strong></div>
+    <div>Best Distance So Far: <strong>{{ job.best_distance }}</strong></div>
+    <button onclick="window.location.href='{% url 'update_view' %}'">
+      Call Function
+    </button>
+  </body>
+</html>
